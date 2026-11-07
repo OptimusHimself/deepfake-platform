@@ -1,0 +1,12 @@
+[
+  {
+    "id": "rtfs-target-00alq36jhjk",
+    "url": "https://huggingface.co/datasets/kontur-ai/rtfs-10k/resolve/83063ae33220e8da968587d4365bd986c7005835/original_videos/00alq36jhjk_00000_00025.mp4",
+    "filename": "original_videos/00alq36jhjk_00000_00025.mp4",
+    "source_path": "original_videos/00alq36jhjk_00000_00025.mp4",
+    "license": "CC-BY-SA-4.0",
+    "generator": "original",
+    "repository": "kontur-ai/rtfs-10k",
+    "revision": "83063ae33220e8da968587d4365bd986c7005835"
+  }
+]
