@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from model_loading import serialized_load
+
 import hashlib
 import hmac
 import io
@@ -36,6 +38,7 @@ _lock = threading.Lock()
 _state: Dict[str, Any] = {"model": None, "processor": None, "device": None}
 
 
+@serialized_load
 def _load():
     with _lock:
         if _state["model"] is not None:

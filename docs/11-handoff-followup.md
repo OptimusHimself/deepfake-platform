@@ -26,3 +26,9 @@ node scripts/fetch-dataset.mjs scripts/rtfs-sample-plan.json demo_data/verified
 - 本机 `python` 指向 Windows Store 占位程序，不能用它运行 Python ZIP 校验或远端模块测试。
 
 下一步优先解决源图获取位置，然后用已授权素材完成视频换脸验收并记录音轨、时长、帧数和耗时，再推进评估。
+
+## 后续：并行调度已部署
+
+根据用户新增要求，远端已从单 worker 改为默认两个 worker。声音克隆、音频检测、视觉任务按三个资源组调度，同组串行、跨组并行。模型加载另加全局可重入锁，修复冷启动时 Transformers/Accelerate 全局初始化补丁与视频检测模型构造冲突的问题。GPU 仍固定为物理 GPU 1。
+
+四项单测通过；2026-11-07 17:32 的真实声音克隆与视频检测任务观测到同时运行，且均成功。健康、能力接口均验证并发上限为 2。具体 job 与时间见 `server/README.md` 的并行任务实测表；复验脚本为 `app/scripts/test-parallel-jobs.mjs`。

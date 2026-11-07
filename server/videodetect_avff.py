@@ -6,6 +6,8 @@ Weights: OpenAVFF Stage-3 (713.5MB), research use; verify license before externa
 
 from __future__ import annotations
 
+from model_loading import serialized_load
+
 import os
 import sys
 import tempfile
@@ -35,6 +37,7 @@ def status() -> Dict[str, Any]:
     }
 
 
+@serialized_load
 def _load():
     with _lock:
         if _state["model"] is not None:

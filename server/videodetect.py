@@ -6,6 +6,8 @@ Checkpoint: realforensics_ff.pth (FF++ trained), placed in models/realforensics.
 
 from __future__ import annotations
 
+from model_loading import serialized_load
+
 import os
 import sys
 import tempfile
@@ -60,6 +62,7 @@ class _RealForensicsModel(nn.Module):
         return self.df_head(self.backbone(frames))
 
 
+@serialized_load
 def _load():
     with _lock:
         if _state["model"] is not None:

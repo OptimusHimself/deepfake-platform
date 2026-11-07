@@ -12,6 +12,8 @@ audio.clone path. Image/video/detection endpoints are added in later phases.
 
 from __future__ import annotations
 
+from model_loading import serialized_load
+
 import hashlib
 import json
 import os
@@ -32,6 +34,8 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
+
+from scheduler import JobQueue, resource_group
 
 import detector as audio_detector
 
@@ -74,7 +78,10 @@ for d in (DATA, UPLOADS, ARTIFACTS, TMP):
 
 app = FastAPI(title="Deepfake Studio P2", version="0.1.0")
 DB_LOCK = threading.Lock()
-QUEUE: "queue.Queue[str]" = queue.Queue()
+MAX_CONCURRENCY = int(os.environ.get("DF_MAX_CONCURRENCY", "2"))
+if not 1 <= MAX_CONCURRENCY <= 4:
+    raise ValueError("DF_MAX_CONCURRENCY must be between 1 and 4")
+QUEUE = JobQueue()
 MODEL = None
 MODEL_LOCK = threading.Lock()
 STOP = threading.Event()
@@ -291,6 +298,7 @@ def probe_audio(path: Path) -> Optional[float]:
     return None
 
 
+@serialized_load
 def load_model():
     global MODEL
     with MODEL_LOCK:
@@ -876,6 +884,12 @@ def process_job(job_id: str) -> None:
             fail_job(job_id, "INTERNAL", f"生成失败: {type(exc).__name__}", str(exc)[:500], False)
 
 
+def enqueue_job(job_id: str) -> None:
+    job = get_job(job_id)
+    if job and job["status"] == "queued":
+        QUEUE.put(job_id, resource_group(job["task"]))
+
+
 def worker() -> None:
     while not STOP.is_set():
         try:
@@ -887,7 +901,7 @@ def worker() -> None:
         except Exception:  # noqa: BLE001 - worker must survive
             fail_job(job_id, "INTERNAL", "worker crashed", "查看服务日志", False)
         finally:
-            QUEUE.task_done()
+            QUEUE.task_done(job_id)
 
 
 class Consent(BaseModel):
@@ -908,12 +922,13 @@ class JobRequest(BaseModel):
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
-    threading.Thread(target=worker, name="tts-worker", daemon=True).start()
+    for index in range(MAX_CONCURRENCY):
+        threading.Thread(target=worker, name=f"job-worker-{index}", daemon=True).start()
     # Requeue jobs that were queued before a restart.
     with DB_LOCK, db() as conn:
         rows = conn.execute("SELECT id FROM jobs WHERE status='queued' ORDER BY created_at").fetchall()
     for row in rows:
-        QUEUE.put(row["id"])
+        enqueue_job(row["id"])
 
 
 @app.get("/v1/health")
@@ -980,7 +995,9 @@ def health(authorization: Optional[str] = Header(default=None)) -> Dict[str, Any
         "status": "ok" if gpu["name"] else "degraded",
         "gateway_version": "0.1.0",
         "gpu": gpu,
-        "queue": {"queued": queued, "running": running, "max_concurrency": 1},
+        "queue": {"queued": queued, "running": running, "max_concurrency": MAX_CONCURRENCY,
+                  "policy": "one_per_resource_group",
+                  "resource_groups": {"tts": 1, "audio-detection": 1, "vision": 1}},
         "models": [
             {
                 "model_id": MODEL_ID,
@@ -1251,7 +1268,12 @@ def capabilities(authorization: Optional[str] = Header(default=None)) -> Dict[st
         "description": "逐帧 HyperSwap 256 或 inswapper 128，保留音轨；最多 300 帧。",
         "year": 2025,
     }
-    return {"gateway_version": "0.1.0", "generated_at": now(), "capabilities": [cap, *detect_caps, *face_caps, image_cap, defense_cap, video_cap, avff_cap, video_defense_cap, video_face_cap]}
+    caps = [cap, *detect_caps, *face_caps, image_cap, defense_cap, video_cap, avff_cap, video_defense_cap, video_face_cap]
+    for capability in caps:
+        capability["resources"]["gpu_group"] = resource_group(capability["task"])
+    return {"gateway_version": "0.1.0", "generated_at": now(),
+            "scheduling": {"max_concurrency": MAX_CONCURRENCY, "policy": "one_per_resource_group"},
+            "capabilities": caps}
 
 
 @app.post("/v1/assets", status_code=201)
@@ -1366,7 +1388,7 @@ def submit_job(
             if idempotency_key:
                 conn.execute("INSERT OR REPLACE INTO idempotency(key, job_id, created_at) VALUES(?,?,?)",
                              (idempotency_key, job_id, now()))
-        QUEUE.put(job_id)
+        enqueue_job(job_id)
         return {"job": get_job(job_id)}
 
     if req.task == "detect.image":
@@ -1391,7 +1413,7 @@ def submit_job(
             if idempotency_key:
                 conn.execute("INSERT OR REPLACE INTO idempotency(key, job_id, created_at) VALUES(?,?,?)",
                              (idempotency_key, job_id, now()))
-        QUEUE.put(job_id)
+        enqueue_job(job_id)
         return {"job": get_job(job_id)}
 
     if req.task == "defend.image":
@@ -1419,7 +1441,7 @@ def submit_job(
             if idempotency_key:
                 conn.execute("INSERT OR REPLACE INTO idempotency(key, job_id, created_at) VALUES(?,?,?)",
                              (idempotency_key, job_id, now()))
-        QUEUE.put(job_id)
+        enqueue_job(job_id)
         return {"job": get_job(job_id)}
 
     if req.task == "defend.video":
@@ -1447,7 +1469,7 @@ def submit_job(
             if idempotency_key:
                 conn.execute("INSERT OR REPLACE INTO idempotency(key, job_id, created_at) VALUES(?,?,?)",
                              (idempotency_key, job_id, now()))
-        QUEUE.put(job_id)
+        enqueue_job(job_id)
         return {"job": get_job(job_id)}
 
     if req.task == "detect.video":
@@ -1477,7 +1499,7 @@ def submit_job(
             if idempotency_key:
                 conn.execute("INSERT OR REPLACE INTO idempotency(key, job_id, created_at) VALUES(?,?,?)",
                              (idempotency_key, job_id, now()))
-        QUEUE.put(job_id)
+        enqueue_job(job_id)
         return {"job": get_job(job_id)}
 
     if req.task == "image.face_swap":
@@ -1512,7 +1534,7 @@ def submit_job(
             if idempotency_key:
                 conn.execute("INSERT OR REPLACE INTO idempotency(key, job_id, created_at) VALUES(?,?,?)",
                              (idempotency_key, job_id, now()))
-        QUEUE.put(job_id)
+        enqueue_job(job_id)
         return {"job": get_job(job_id)}
 
     if req.task == "video.face_swap":
@@ -1546,7 +1568,7 @@ def submit_job(
             if idempotency_key:
                 conn.execute("INSERT OR REPLACE INTO idempotency(key, job_id, created_at) VALUES(?,?,?)",
                              (idempotency_key, job_id, now()))
-        QUEUE.put(job_id)
+        enqueue_job(job_id)
         return {"job": get_job(job_id)}
 
     ref = req.inputs.get("reference_audio")
@@ -1584,7 +1606,7 @@ def submit_job(
         if idempotency_key:
             conn.execute("INSERT OR REPLACE INTO idempotency(key, job_id, created_at) VALUES(?,?,?)",
                          (idempotency_key, job_id, now()))
-    QUEUE.put(job_id)
+    enqueue_job(job_id)
     return {"job": get_job(job_id)}
 
 

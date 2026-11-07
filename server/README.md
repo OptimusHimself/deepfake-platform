@@ -1,6 +1,28 @@
-# 远端服务（音频克隆/检测 + 图片换脸/检测 + 图片防御）
+# 远端服务（音视频克隆/换脸、检测与防御）
 
-当前服务器上的可用服务：`audio.clone`、`detect.audio`、`image.face_swap`、`detect.image`、`defend.image`。上传、排队、生成/分析、下载/报告都已跑通；视频与音频/视频防御在后续阶段加入。
+当前服务器上的可用服务：`audio.clone`、`detect.audio`、`image.face_swap`、`detect.image`、`defend.image`、`detect.video`、`defend.video`、`video.face_swap`。
+
+## 并行任务（2026-11-07）
+
+默认两个 worker，同时运行最多两个任务。声音克隆与视频检测可以同时执行，仍固定使用物理 GPU 1。
+
+- 分组：`audio.clone` → `tts`；`detect.audio` → `audio-detection`；所有图像/视频任务 → `vision`。
+- 每组最多一个任务，避免共享模型并发修改（视频防御会调用视频检测，图片与视频换脸共用模型）。队列选择最早的可运行任务，忙碌组不会挡住其他组。
+- 模型加载通过进程级可重入锁串行化，避免 Transformers/Accelerate 初始化的全局 torch 补丁影响其他线程；加载后推理可并行。
+- `DF_MAX_CONCURRENCY` 可设置 1–4，默认 2，设为 1 回退串行；实际并发还受三个组限制。此配置控制任务数，不保证显存容量，也没有动态显存预留或自动 OOM 重试。
+- `/v1/health.queue` 与 `/v1/capabilities.scheduling` 返回实际并发上限和策略，各能力的 `resources.gpu_group` 返回实际分组。
+- 部署需要同步 `scheduler.py`、`model_loading.py` 和修改后的模型模块，并重启服务；保持单个 uvicorn 进程，不使用多个 uvicorn worker。
+
+验证：远端代码目录执行 `python -m unittest test_scheduler -v`；本地 `app/` 执行 `node scripts/test-parallel-jobs.mjs`（需要 `.env`、在线隧道、空闲队列，以及历史中成功的授权声音克隆和视频检测样本）。集成脚本会创建两个真实任务，断言观察到运行时间重叠且都成功。
+
+冷启动实测（2026-11-07，Asia/Shanghai）：
+
+| 任务 | job | 开始 | 完成 | 结果 |
+|---|---|---|---|---|
+| 声音克隆 | `job_9adeb8c680714162` | 17:32:01 | 17:32:37 | succeeded，1 个产物 |
+| 视频检测 | `job_0ccbf82469084e57` | 17:32:01 | 17:32:07 | succeeded，2 个产物 |
+
+轮询观测到两个任务同时处于运行状态；四项调度/初始化锁单测通过。此记录证明并行执行和冷启动可用，不代表吞吐提升比例。
 
 ## 当前服务器（2026-10-31 实测）
 

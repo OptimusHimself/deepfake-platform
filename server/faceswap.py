@@ -7,6 +7,8 @@ Registry:
 
 from __future__ import annotations
 
+from model_loading import serialized_load
+
 import io
 import os
 import threading
@@ -126,6 +128,7 @@ def auto_model_id() -> str:
     return max(available, key=lambda model_id: SWAPPERS[model_id]["priority"])
 
 
+@serialized_load
 def _get_app():
     with _lock:
         if _state["app"] is not None:
@@ -144,6 +147,7 @@ def _get_app():
         return app, providers
 
 
+@serialized_load
 def _load_swapper(model_id: str):
     if model_id not in SWAPPERS:
         raise KeyError(f"unknown swapper: {model_id}")

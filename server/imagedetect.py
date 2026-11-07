@@ -7,6 +7,8 @@ The checkpoint is a plain torchvision EfficientNet-B4 state dict with a
 
 from __future__ import annotations
 
+from model_loading import serialized_load
+
 import io
 import os
 import threading
@@ -115,6 +117,7 @@ def _build_dfb() -> nn.Module:
     return model
 
 
+@serialized_load
 def _load():
     with _lock:
         if _state["model"] is not None:

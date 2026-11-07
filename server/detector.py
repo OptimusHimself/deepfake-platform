@@ -6,6 +6,8 @@ exposed here. Each detector returns a per-window fake probability in [0, 1].
 
 from __future__ import annotations
 
+from model_loading import serialized_load
+
 import importlib.util
 import os
 import sys
@@ -126,6 +128,7 @@ def _load_spectra(info: Dict[str, Any]):
     return None, model, 0, info
 
 
+@serialized_load
 def load_detector(model_id: str):
     if model_id not in DETECTORS:
         raise KeyError(f"unknown detector: {model_id}")
