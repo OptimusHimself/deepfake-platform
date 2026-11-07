@@ -1,0 +1,23 @@
+{
+  "task": "audio.clone",
+  "model": "auto",
+  "inputs": {
+    "reference_audio": "ast_01J9Z8Q2K7"
+  },
+  "text": {
+    "reference_text": "这是我录制的一段参考语音，用来克隆我的音色。",
+    "target_text": "欢迎使用本地 deepfake 演示平台，这是一段由 Qwen3-TTS 克隆生成的音频。",
+    "instruct": null
+  },
+  "options": {
+    "language": "Chinese",
+    "quality": "high",
+    "seed": 42,
+    "strength": null
+  },
+  "consent": {
+    "subject": "self",
+    "purpose": "local demo",
+    "agreed": true
+  }
+}

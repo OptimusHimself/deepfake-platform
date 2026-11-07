@@ -1,0 +1,16 @@
+{
+  "error": {
+    "code": "NO_CAPABILITY",
+    "message": "没有模型支持这组输入",
+    "hint": "audio.clone 还需要 reference_text；也可以改用 audio.tts，只提供目标文本",
+    "retryable": false,
+    "details": {
+      "task": "audio.clone",
+      "missing_roles": ["reference_text"],
+      "provided_roles": ["reference_audio"],
+      "alternative_tasks": ["audio.tts"],
+      "available_models": ["qwen3-tts-1.7b-base"]
+    },
+    "request_id": "req_01J9ZH3N8Q"
+  }
+}

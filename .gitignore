@@ -1,0 +1,21 @@
+# Local secrets and runtime data (never commit)
+.ssh_tmp/
+data/
+app/data/
+app/.env
+app/node_modules/
+app/dist/
+server/__pycache__/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Datasets, model weights and local experiment artifacts
+demo_data/
+实验用视频/
+models/
+*.pem
+*.key
+.env
+.venv/
+

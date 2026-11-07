@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "id": "cert_01J9ZF7D",
+  "sha256": "b81e4f0a9c2d6e8b1f3a5c7d9e0b2f4a6c8d1e3f5a7b9c0d2e4f6a8b1c3d5e7f",
+  "job_id": "job_01J9ZF7H",
+  "issuer": "deepfake-platform-local",
+  "issued_at": "2026-10-31T15:05:00+08:00",
+  "modality": "image",
+  "method": "pgd-ensemble-eot",
+  "strength": "medium",
+  "source": {
+    "asset_id": "ast_01J9ZF7A",
+    "sha256": "5c1d0e7a2b8f4c9d6e3a1b7f0c2d8e4a6b9c1d3e5f7a9b0c2d4e6f8a1b3c5d7e",
+    "width": 1024,
+    "height": 1024
+  },
+  "protected": {
+    "artifact_id": "art_01J9ZF7B",
+    "sha256": "b81e4f0a9c2d6e8b1f3a5c7d9e0b2f4a6c8d1e3f5a7b9c0d2e4f6a8b1c3d5e7f",
+    "mime": "image/png",
+    "size_bytes": 1487223
+  },
+  "metrics": {
+    "psnr_db": 41.2,
+    "ssim": 0.987,
+    "lpips": 0.012,
+    "identity_similarity_before": 0.78,
+    "identity_similarity_after": 0.41
+  },
+  "watermark": {
+    "scheme": "dwt-dct-svd",
+    "watermark_id": "wm_01J9ZF7C",
+    "payload_bits": 64,
+    "decode_confidence": 0.99
+  },
+  "hmac": "hmac-sha256:8f2c4e6a0b1d3f5a7c9e1b3d5f7a9c0e2b4d6f8a1c3e5b7d9f0a2c4e6b8d1f3a",
+  "verify": {
+    "endpoint": "/v1/defense/verify",
+    "method": "POST"
+  },
+  "warnings": [
+    "不保证抵御压缩、裁剪、重录与自适应攻击",
+    "保护强度与画质/听感存在权衡，请保留原始文件"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "task": "detect.image",
+  "model": "auto",
+  "inputs": {
+    "file": "ast_01J9Z8T6P3"
+  },
+  "text": {},
+  "options": {
+    "quality": "standard"
+  },
+  "consent": {
+    "subject": "authorized",
+    "purpose": "deepfake analysis",
+    "agreed": true
+  }
+}

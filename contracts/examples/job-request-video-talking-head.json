@@ -1,0 +1,22 @@
+{
+  "task": "video.talking_head",
+  "model": "auto",
+  "inputs": {
+    "source_image": "ast_01J9Z8R4M1"
+  },
+  "text": {
+    "target_text": "大家好，这是用我自己的照片和文字生成的说话视频。",
+    "reference_text": null,
+    "instruct": null
+  },
+  "options": {
+    "language": "Chinese",
+    "quality": "high",
+    "seed": 7
+  },
+  "consent": {
+    "subject": "self",
+    "purpose": "local demo",
+    "agreed": true
+  }
+}

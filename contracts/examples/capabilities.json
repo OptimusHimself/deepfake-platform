@@ -1,0 +1,88 @@
+{
+  "gateway_version": "0.1.0",
+  "generated_at": "2026-10-31T15:00:00+08:00",
+  "capabilities": [
+    {
+      "model_id": "qwen3-tts-1.7b-base",
+      "display_name": "Qwen3-TTS 1.7B Base",
+      "task": "audio.clone",
+      "service": "tts",
+      "required_inputs": ["reference_audio"],
+      "optional_inputs": [],
+      "required_text": ["reference_text", "target_text"],
+      "output_kind": "audio",
+      "limits": {
+        "max_input_duration_s": 120,
+        "min_reference_duration_s": 3,
+        "max_reference_duration_s": 30,
+        "max_target_chars": 2000,
+        "max_file_mb": 50,
+        "languages": ["Chinese", "English", "Japanese", "Korean", "German", "French", "Russian", "Portuguese", "Spanish", "Italian"]
+      },
+      "resources": {
+        "vram_gb": 8,
+        "typical_seconds": 6,
+        "max_concurrency": 1,
+        "gpu_group": "tts"
+      },
+      "priority": 100,
+      "quality_tier": "high",
+      "status": "ready",
+      "version": "1.7B",
+      "license": "Apache-2.0"
+    },
+    {
+      "model_id": "talking-head-text-v1",
+      "display_name": "说话视频（文本驱动，TTS + 唇形）",
+      "task": "video.talking_head",
+      "service": "vision",
+      "required_inputs": ["source_image"],
+      "optional_inputs": ["driving_audio"],
+      "required_text": ["target_text"],
+      "output_kind": "video",
+      "pipeline": ["qwen3-tts-1.7b-base", "lipsync-v1"],
+      "limits": {
+        "max_input_duration_s": 60,
+        "max_target_chars": 500,
+        "max_file_mb": 20,
+        "languages": ["Chinese", "English"]
+      },
+      "resources": {
+        "vram_gb": 20,
+        "typical_seconds": 240,
+        "max_concurrency": 1,
+        "gpu_group": "vision"
+      },
+      "priority": 80,
+      "quality_tier": "standard",
+      "status": "loading",
+      "version": "0.1.0",
+      "license": "mixed"
+    },
+    {
+      "model_id": "detect-ensemble-v1",
+      "display_name": "图像 Deepfake 集成检测（EffNet + CLIP + Grad-CAM）",
+      "task": "detect.image",
+      "service": "vision",
+      "required_inputs": ["file"],
+      "optional_inputs": [],
+      "required_text": [],
+      "output_kind": "report",
+      "limits": {
+        "max_file_mb": 20,
+        "max_resolution": 4096
+      },
+      "resources": {
+        "vram_gb": 6,
+        "typical_seconds": 2,
+        "max_concurrency": 2,
+        "gpu_group": "vision"
+      },
+      "priority": 100,
+      "quality_tier": "high",
+      "status": "ready",
+      "version": "0.1.0",
+      "license": "mixed (components follow their repositories)"
+    }
+  ]
+}

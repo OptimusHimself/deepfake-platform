@@ -1,0 +1,27 @@
+# P2 remote service dependencies.
+# The current server runs a venv created from the shared persona_vectors env,
+# so torch/torchaudio (2.6.0+cu124) come from that env's system site-packages.
+# Install with:
+#   python -m pip install --no-deps qwen-tts==0.1.1
+#   python -m pip install -r requirements.txt
+# gradio is intentionally omitted: qwen-tts only needs it for its Web UI.
+
+qwen-tts==0.1.1
+transformers==4.57.3
+accelerate==1.12.0
+librosa==0.11.0
+soundfile==0.14.0
+sox==1.5.0
+onnxruntime-gpu==1.23.2
+insightface==0.7.3
+efficientnet_pytorch==0.7.1
+invisible-watermark==0.2.0
+lpips==0.1.4
+scikit-image
+opencv-python-headless
+Pillow
+einops==0.8.2
+fastapi==0.141.1
+uvicorn==0.52.4
+python-multipart==0.0.32
+httpx==0.28.1
