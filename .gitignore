@@ -19,3 +19,10 @@ models/
 .env
 .venv/
 
+
+# Local presentation builds and evaluation media
+.ppt-build/
+output/
+测试结果/
+*.pptx
+

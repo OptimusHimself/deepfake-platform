@@ -51,6 +51,16 @@
 
 **为什么之前保护没用**：inswapper/HyperSwap 取的是 ArcFace 身份 embedding，而旧方案推的是 CLIP 全局特征。视觉上看不出差别，换脸模型仍能提身份；我之前给的“相似度 0.898→0”是错误测试，已撤回。
 
+**2026-11-07 实测（RTFS-10k + 手机录制 5s）**：
+
+- 视频换脸已接入：HyperSwap 256 / inswapper 128，逐帧 + 保留音轨，最多 300 帧。
+- RealForensics 能识别 RTFS 的 inswapper 假视频（3/3 为 100% fake）。
+- 但平台 HyperSwap 生成的攻击视频被漏检：攻击原始 **4.71% fake（real）**，攻击保护后 **21.50% fake（real）**。
+- ArcFace 身份相似度：攻击原始 **0.814**，攻击保护后 **0.812**，几乎不变。
+- 防御指标：PSNR 42.46dB、SSIM 0.9839、水印 100%（编码前）。
+- 结论：当前逐帧 CLIP PGD 视频防御**没有降低 HyperSwap 攻击成功率**；检测器也会漏掉自己生成的 HyperSwap 视频。演示材料见 `demo_data/EXPERIMENT.md`。
+
+
 ## 2. 升级目标
 
 ### 换脸
